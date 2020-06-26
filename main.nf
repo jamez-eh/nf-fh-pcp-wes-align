@@ -6,50 +6,12 @@ params.bwa_index = null
 
 reference = file(params.reference)
 reference_index = file(params.reference_index)
-
 reference_dict = file(params.reference_dict)
-rear_index = file(params.rear_index)
-indels_index = file(params.indels_index)
-
-indels = file(params.indels)
-rear = file(params.rear)
 pdx_reference = file(params.pdx_reference)
-
 input_csv = file(params.input_csv)
 output_folder = file(params.output_folder)
-reference = file(params.reference)
-contig_dict = file(params.contig_dict)
-
-
-
-
-/*
-include './modules/cnvnator' params (
-        reference: params.reference,
-        reference_index: params.reference_index,
-        reference_dict: params.reference_dict,
-        output_folder: params.output_folder
-)
-
-
-include './modules/single_varfilter.nf' params (
-        reference: params.reference,
-        reference_index: params.reference_index,
-        reference_dict: params.reference_dict,
-        output_folder: params.output_folder,
-	data_source: false,
-	rear: params.rear,
-	rear_index: params.rear_index,
-	indels: params.indels,
-	indels_index: params.indels_index
-)
-*/
-
-include CNVkit_wf from './modules/CNVkit.nf'
-include gatkCNV_wf from './modules/gatkCNV.nf'
-include mutect2_wf from './modules/mutect2.nf'
-
-
+rear = file(params.rear)
+rear_index = file(params.rear_index)
 
 process mouse_sed {
         container "ubuntu"
@@ -231,8 +193,8 @@ process sam_sort {
 
 
 process picard_duplicates {
-	container 'broadinstitute/gatk:4.1.4.1'		
-	memory '50 GB'
+	container 'broadinstitute/gatk:4.1.7.0'		
+	memory '30 GB'
 	errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
         maxRetries 100
 
@@ -243,14 +205,15 @@ process picard_duplicates {
 	tuple val("${sampleID}"), val("${kitID}"), val("${type}"), val("${patient}"),  file("${sampleID}_q_clean_sorted_rmdp.bam")
 
         """
-        gatk MarkDuplicates -I ${bam_q_clean_sorted_file} -O ${sampleID}_q_clean_sorted_rmdp.bam -METRICS_FILE {sampleID}_metrics.txt  -REMOVE_DUPLICATES true -VALIDATION_STRINGENCY STRICT -ASSUME_SORTED true -CREATE_INDEX true
+	mkdir temporary
+        gatk MarkDuplicates -I ${bam_q_clean_sorted_file} -O ${sampleID}_q_clean_sorted_rmdp.bam -METRICS_FILE {sampleID}_metrics.txt  -REMOVE_DUPLICATES true -VALIDATION_STRINGENCY STRICT -ASSUME_SORTED true -CREATE_INDEX true --SORTING_COLLECTION_SIZE_RATIO 0.20 --TMP_DIR temporary
         """
 }
 
 
 //Base quality recalibration log-scale scoring
 process gatk_baserecalibrator {
-	container 'broadinstitute/gatk:4.1.4.1'
+	container 'broadinstitute/gatk:4.1.7.0'
 	errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
         maxRetries 100
 
@@ -262,10 +225,10 @@ process gatk_baserecalibrator {
 	file reference_index
 	file reference_dict
 	file rear_index
-	file indels_index
+
 
         output:
-        tuple val("${sampleID}"), val("${kitID}"), val("${type}"), val("${patient}"),  val(patient), file("${sampleID}_recal_data.table") 
+        tuple val("${sampleID}"), val("${kitID}"), val("${type}"), val("${patient}"),  file("${sampleID}_recal_data.table") 
 
         """
         gatk BaseRecalibrator -R ${ref} -known-sites ${rear} -I ${sorted_bam} -O ${sampleID}_recal_data.table --java-options -Xmx8g 
@@ -273,14 +236,14 @@ process gatk_baserecalibrator {
         """
 }
 
+
 process gatk_printreads{
         container 'broadinstitute/gatk:4.1.4.1'
         publishDir "$params.output_folder/${sampleID}"
-	errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
-        maxRetries 100
+
 
         input:
-        tuple val(sampleID), val(kitID), val(type), file(precal_data), val(patient), file(bam_file)
+        tuple val(sampleID), val(kitID), val(type), val(patient), file(precal_data), file(bam_file)
         file reference
         file reference_index
         file reference_dict
@@ -329,8 +292,9 @@ workflow vanilla_align {
 	  picard_clean(bam_filtering.out)
 	  sam_sort(bam_filtering.out)
 	  picard_duplicates(sam_sort.out)
-	  gatk_baserecalibrator(picard_duplicates.out, reference, rear, reference_index, reference_dict, rear_index, indels_index)
-	  gatk_printreads(gatk_baserecalibrator.out.join(picard_duplicates.out, by : [0,1,2]), reference, reference_index, reference_dict)
+	  gatk_baserecalibrator(picard_duplicates.out, reference, rear, reference_index, reference_dict, rear_index)
+
+	  gatk_printreads(gatk_baserecalibrator.out.join(picard_duplicates.out, by : [0,1,2,3]), reference, reference_index, reference_dict)
 	
 	emit:
 	  raw_bams = sam_to_bam.out
@@ -342,59 +306,25 @@ workflow {
 
 	 reference = file(params.reference)
 	 reference_index = file(params.reference_index)
-
 	 reference_dict = file(params.reference_dict)
-	 rear_index = file(params.rear_index)
-	 indels_index = file(params.indels_index)
-
-	 indels = file(params.indels)
-	 rear = file(params.rear)
 	 pdx_reference = file(params.pdx_reference)
-
 	 input_csv = file(params.input_csv)
 	 output_folder = file(params.output_folder)
-	 reference = file(params.reference)
-	 contig_dict = file(params.contig_dict)
-	 common_variants = file(params.common_variants)
-	 common_variants_index = file(params.common_variants_index)
-	 clinvar = file(params.clinvar)
-	 refFlat = file(params.refFlat)
-	 coords = file(params.coords)
 
-	if(params.align) {
+
 	fqs_ch = Channel
 	    .fromPath(params.input_csv)
 	    .splitCsv(header:true)
-	    .map{ row-> tuple(row.sampleID, row.kitID, row.type, row.patient, file(row.R1), file(row.R2)) }
+	    .map{ row-> tuple(row.sampleID, row.kitID, row.type, row.patientID, file(row.R1), file(row.R2)) }
 
-        bam_bam = Channel.empty()
-	}
-	else {
-	fqs_ch = Channel.empty()
-	bam_bam = Channel
-            .fromPath(params.input_csv)
-            .splitCsv(header:true)
-            .map{ row-> tuple(row.sampleID, row.kitID, row.type, row.patientID, file(row.bam)) }
-	}
-	if (params.cnv || params.mutect2) {
-	beds_ch = Channel
-       	     .fromPath(params.input_beds)
-             .splitCsv(header:true)
-             .map{ row-> tuple(row.kitID, file(row.capture_bed)) }
-	}
-
-
-
+	
 	main:
-	if(params.align){
+
 	fqs_ch.branch {
                 Normal : it[2] == 'Normal'
                 Tumor : it[2] == 'Tumor'
                }.set { fqs_branched }
 
-
-        pdx = Channel.empty()
-	removed = Channel.empty()
 
 	if(params.pdx) {
 		pdx_align(fqs_branched.Tumor)

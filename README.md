@@ -10,3 +10,9 @@ Alignment of exome data
    
    example:
    sample_1,,Tumor,,sample_1.R1,sample_1.R2
+
+
+## Details:
+   
+   Pipeline does automatic subtraction of xenograph genome specified if params.pdx = true.
+   Does not do indel realignment since it was removed from GATK best practices.
