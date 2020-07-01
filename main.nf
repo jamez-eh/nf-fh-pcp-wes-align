@@ -13,10 +13,29 @@ output_folder = file(params.output_folder)
 rear = file(params.rear)
 rear_index = file(params.rear_index)
 
+process fastqc {
+	container 'nfcore/rnaseq:1.4.2'
+        errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
+        maxRetries 50
+	label 'small'
+
+	input:
+	tuple val(sampleID), path(fastq1), path(fastq2)
+
+	output:
+    	file "*_fastqc.{zip,html}"
+
+
+	"""
+        fastqc --quiet --threads 3 ${fastq1} ${fastq2}
+	"""
+}
+
 process mouse_sed {
         container "ubuntu"
 	errorStrategy 'retry'
 	maxRetries 20
+	label 'small'
 
 	input:
 	file pdx_reference 
@@ -33,6 +52,7 @@ process combine_fastas {
         container "ubuntu"
 	errorStrategy 'retry'
 	maxRetries 30
+	label 'small'
 
         input:
         file pdx_reference
@@ -51,6 +71,7 @@ process bwa_index {
 	container "fredhutch/bwa:0.7.17"
 	errorStrategy 'retry'
 	maxRetries 30
+	label 'small'
 
 	input:
         file combined_reference
@@ -70,6 +91,7 @@ process bwa_mem {
 	container "fredhutch/bwa:0.7.17"
   	errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
   	maxRetries 50
+	label 'medium'
 
 	input:
 	tuple val(sampleID), val(kitID), val(type), val(patient), file(R1), file(R2)
@@ -88,6 +110,7 @@ process remove_pdx {
         container "ubuntu"
 	errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
         maxRetries 100
+	label 'small'
 
         input:
 	tuple val(sampleID), val(kitID), val(type), val(patient), file(hybrid_sam)
@@ -108,6 +131,7 @@ process sam2fastq {
 	container 'broadinstitute/gatk:4.1.4.1'
 	errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
         maxRetries 100
+	label 'small'
 
 	input:
 	tuple val(sampleID), val(kitID), val(type), val(patient), file(sam_file)
@@ -128,6 +152,7 @@ process sam_to_bam {
 	container "fredhutch/bwa:0.7.17-samtools-1.10"
 	errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
         maxRetries 100
+	label 'small'
 
 	input:
 	tuple val(sampleID), val(kitID), val(type), val(patient), file(sam_file) 
@@ -147,6 +172,7 @@ process bam_filtering {
 	container "fredhutch/bwa:0.7.17-samtools-1.10"
 	errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
         maxRetries 100
+	label 'small'
 
         input:
         tuple val(sampleID), val(kitID), val(type), val(patient), file(bam_file) 
@@ -163,6 +189,7 @@ process bam_filtering {
 process picard_clean {
 	container 'broadinstitute/gatk:4.1.4.1'
 	errorStrategy 'ignore'
+	label 'medium'
 
 	input:
 	tuple val(sampleID), val(kitID), val(type), val(patient), file(bam_q_file)
@@ -179,6 +206,7 @@ process picard_clean {
 process sam_sort {
 	container "fredhutch/bwa:0.7.17-samtools-1.10"
 	errorStrategy 'ignore'
+	label 'medium'
 
         input:
         tuple val(sampleID), val(kitID), val(type), val(patient), file(bam_q_clean_file)
@@ -194,9 +222,9 @@ process sam_sort {
 
 process picard_duplicates {
 	container 'broadinstitute/gatk:4.1.7.0'		
-	memory '30 GB'
 	errorStrategy { sleep(Math.pow(2, task.attempt) * 200 as long); return 'retry' }
         maxRetries 100
+	label 'large'
 
 	input:
         tuple val(sampleID), val(kitID), val(type), val(patient), file(bam_q_clean_sorted_file)
