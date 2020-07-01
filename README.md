@@ -13,15 +13,17 @@ Alignment of exome data
 
 ## Details:
    
-   Pipeline does automatic subtraction of xenograph genome specified if params.pdx = true.
+   Pipeline does automatic subtraction of xenograph genome specified if params.pdx = true. ```--pdx true``` in the run.sh file
    Does not do indel realignment since it was removed from GATK best practices.
+   NOTE: Do not align pdx tumors and regular tumors in the same run. 
 
 ## Example Files:
 
    ### run.sh
-
+   
    Here is an example of a run script with all the required files passed as parameters. This run script assumes that you have cloned this git repository and are running the pipeline from the repo.
-   Alternatively you can run directly from the repo as shown in run_from_git.sh
+   Alternatively you can run directly from the repo as shown in run_from_git.sh.
+   Run with ```bash run.sh``` 
 
    ### run_from_git.sh
    
@@ -33,13 +35,13 @@ Alignment of exome data
    You will need to specify the location of your nextflow.config file in one the run script above 
    ``` -c location/of/nextflow.config ```
 
-   The config contains three profiles, each is a different configuration for running the pipeline. The profile is specified in the ```run.sh`` 
+   The config contains three profiles, each is a different configuration for running the pipeline. The profile is specified in the ```run.sh```
    hpc : runs on slurm cluster
    aws : runs on aws batch
    local: runs on a single (large) node
 
    ### running on aws batch
-   If your place ALL files (including references) on s3 and replace the necessary paths in both the ```input_csv``` and the ```run.sh``` then you can use the aws profile.
+   If you place ALL files (including references) on s3 and replace the necessary paths in both the ```input_csv``` and the ```run.sh``` then you can use the aws profile.
    Currently the provided queue is cpu-spot-50, but this queue may not be optimal for the job. Read more about AWS batch queues here : https://sciwiki.fredhutch.org/scicomputing/compute_cloud/
 
    
