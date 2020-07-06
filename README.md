@@ -13,9 +13,14 @@ Alignment of exome data
 
 ## Details:
    
-   Pipeline does automatic subtraction of xenograph genome specified if params.pdx = true. ```--pdx true``` in the run.sh file
+    
+   Pipeline does automatic subtraction of host exome if type of sample is specified as 'PDX' in ```input_csv```. If type is specified as 'Tumor' or 'Normal' no subtraction is performed. This subtraction is done by combining the reference and the host reference provided as parameters before aligning the PDX samples. The host reads can be removed via a sed command.
+
+   Alignment is performed with BWA-MEM. 
+   Duplicates are marked/removed and base 
+Post processing of bams details can be found here https://gatk.broadinstitute.org/hc/en-us/articles/360035535912-Data-pre-processing-for-variant-discovery
    Does not do indel realignment since it was removed from GATK best practices.
-   NOTE: Do not align pdx tumors and regular tumors in the same run. 
+   
 
 ## Example Files:
 
