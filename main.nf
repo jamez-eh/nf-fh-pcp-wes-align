@@ -348,26 +348,22 @@ workflow {
 	
 	main:
 
-	fqs_ch.branch {
-                Normal : it[2] == 'Normal'
-                Tumor : it[2] == 'Tumor'
+ 	fqs_ch.branch {
+                Human : it[2] == 'Normal' | it[2] == 'Tumor'
+		PDX : it[2] == 'PDX'
                }.set { fqs_branched }
 
 
-	if(params.pdx) {
-		pdx_align(fqs_branched.Tumor)
-		pdx = pdx_align.out
-		mixed = pdx_align.out.mixed_bams
-		final_fqs = pdx.human_fqs
-	}
-	else {
-	       final_fqs = fqs_branched.Tumor
-	       mixed = Channel.empty()
-	}
+	 pdx_align(fqs_branched.PDX)
+	 pdx = pdx_align.out
+	 mixed = pdx_align.out.mixed_bams
+	 final_fqs = pdx.human_fqs
+	 
+
 	
-	
-	fqs_mixed = final_fqs.mix(fqs_branched.Normal)
+	fqs_mixed = final_fqs.mix(fqs_branched.Human)
 	vanilla_align(fqs_mixed)
+
 	raw = vanilla_align.out.raw_bams
 	recal = vanilla_align.out.recal_bams
 
