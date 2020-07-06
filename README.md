@@ -17,10 +17,11 @@ Alignment of exome data
    Pipeline does automatic subtraction of host exome if type of sample is specified as 'PDX' in ```input_csv```. If type is specified as 'Tumor' or 'Normal' no subtraction is performed. This subtraction is done by combining the reference and the host reference provided as parameters before aligning the PDX samples. The host reads can be removed via a sed command.
 
    Alignment is performed with BWA-MEM. 
-   Duplicates are marked/removed and base 
+   Duplicates are marked/removed and base recalibration is performed with the supplied ```rear``` file as high quality snp set. 
 Post processing of bams details can be found here https://gatk.broadinstitute.org/hc/en-us/articles/360035535912-Data-pre-processing-for-variant-discovery
    Does not do indel realignment since it was removed from GATK best practices.
    
+   An additional quality filter is applied for a minimum base quality. The default is 20, but can be changed with the parameter ```--base_quality```
 
 ## Example Files:
 
@@ -92,8 +93,10 @@ Post processing of bams details can be found here https://gatk.broadinstitute.or
        #### ref_name:
        hg38 or hg19, used to download funcotating data. Details: https://gatk.broadinstitute.org/hc/en-us/articles/360037224432-Funcotator
 
+       ### base_quality:
+       minimum base quality cutoff.
 ```
-       --ref_name hg38 \
-       --output_folder /fh/scratch/delete90/nelson_p/james/bams \
-
+    --ref_name hg38 \
+    --output_folder /fh/scratch/delete90/nelson_p/james/bams \
+    --base_quality 20 \
 ```
