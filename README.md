@@ -1,6 +1,13 @@
 # nf-fh-pcp-wes-align
 Alignment of exome data
 
+## How To Run:
+Make sure that Docker/Singularity and Nextflow are installed on your machine. On the fred hutch server we can use ```module load nextflow```
+Can then clone the repo, alter the parameters as necessary and then run ```bash run.sh```
+
+Otherwise can be run by just downloading the ```run_from_git.sh``` and ```nextflow.config``` and then running
+```bash run_from_git.sh```
+
 ## input format
    
    ### input_csv:
@@ -86,7 +93,7 @@ Post processing of bams details can be found here https://gatk.broadinstitute.or
 ```
 
 
-   ### Additional parameters.
+### Additional parameters.
        #### output_folder:
        Results output location
 
@@ -95,6 +102,8 @@ Post processing of bams details can be found here https://gatk.broadinstitute.or
 
        ### base_quality:
        minimum base quality cutoff.
+
+
 ```
     --ref_name hg38 \
     --output_folder /fh/scratch/delete90/nelson_p/james/bams \
