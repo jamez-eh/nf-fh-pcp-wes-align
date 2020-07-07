@@ -15,10 +15,12 @@ Otherwise can be run by just downloading the ```run_from_git.sh``` and ```nextfl
    ### input_csv:
    ```sampleID,kitID,type,patientID,R1,R2```
    
-   patientID and kitID can be left blank for this pipeline, but must be kept to maintain consistency with other pipelines.
+   patientID and kitID can be left blank for this pipeline, but must be kept to maintain consistency with other pipelines. (it is probably ok if the columns don't exist in the manifest, but I have not tested this properly)
+   The type column is important to indicate which samples will have the host reference removal step performed. A value of Tumor, or Normal will avoid the host reference removal, but a value of PDX will indicate a sample that requires this step.
    
    example:
    sample_1,,Tumor,,sample_1.R1,sample_1.R2
+
 
 ## Details:
    
