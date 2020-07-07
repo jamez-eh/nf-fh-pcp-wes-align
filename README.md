@@ -3,6 +3,8 @@ Alignment of exome data
 
 ## How To Run:
 Make sure that Docker/Singularity and Nextflow are installed on your machine. On the fred hutch server we can use ```module load nextflow```
+
+It is always a good idea to make sure that you have the most up to date pipeline: ```nextflow pull jamez-eh/nf-fh-pcp-wes-align```
 Can then clone the repo, alter the parameters as necessary and then run ```bash run.sh```
 
 Otherwise can be run by just downloading the ```run_from_git.sh``` and ```nextflow.config``` and then running
